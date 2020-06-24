@@ -103,65 +103,55 @@ impl Config {
             None => return Err("No spec for unnamed arguments found".to_string()),
         };
 
-        let mut result = Vec::new();
+        let mut values = Vec::new();
 
         for arg in args {
             // New full-name arg
 
-            if arg.starts_with("--") {
+            if arg.starts_with("-") {
                 // Save the last option values
-                println!(
-                    "Collected values {:?} for option {}",
-                    result, current_spec.name
-                );
+                parsed.insert(current_spec.name.to_string(), values);
+                values = Vec::new();
 
-                parsed.insert(current_spec.name.to_string(), result);
-                result = Vec::new();
-                current_spec = match name_map.get(&arg[2..]) {
-                    Some(spec) => spec,
-                    None => return Err(format!("Invalid option {}", arg)),
-                };
-                continue;
-            }
-            // One or more abbreviated options
-            else if arg.starts_with("-") {
-                // Save the last option values
-                println!(
-                    "Collected values {:?} for option {}",
-                    result, current_spec.name
-                );
-                parsed.insert(current_spec.name.to_string(), result);
-                result = Vec::new();
-                let options: Vec<_> = arg.chars().skip(1).collect();
-
-                // The values after a group of abbreviated options refer to the last option
-                for (index, option) in options.iter().enumerate() {
-                    let spec = match abrev_map.get(&option) {
+                // Single full name argument
+                if arg.starts_with("--") {
+                    current_spec = match name_map.get(&arg[2..]) {
                         Some(spec) => spec,
-                        None => return Err(format!("Invalid abbreviated option {}", option)),
+                        None => return Err(format!("Invalid option {}", arg)),
                     };
-
-                    // The last option is set to collect the values following
-                    if index == options.len() - 1 {
-                        current_spec = spec;
-                        break;
-                    }
-
-                    parsed.insert(spec.name.to_string(), vec![]);
                 }
-                println!("Abrev options: {:?}", options);
+                // One or more abbreviated options
+                else {
+                    let options: Vec<_> = arg.chars().skip(1).collect();
+
+                    // The values after a group of abbreviated options refer to the last option
+                    for (index, option) in options.iter().enumerate() {
+                        let spec = match abrev_map.get(&option) {
+                            Some(spec) => spec,
+                            None => return Err(format!("Invalid abbreviated option {}", option)),
+                        };
+
+                        // The last option is set to collect the values following
+                        if index == options.len() - 1 {
+                            current_spec = spec;
+                            break;
+                        }
+
+                        parsed.insert(spec.name.to_string(), vec![]);
+                    }
+                }
                 continue;
             }
-            result.push(arg);
+            values.push(arg);
         }
 
         // Add left over bit
-        if result.len() > 0 {
+        if values.len() > 0 {
             println!(
                 "Collected remaining values {:?} for option {}",
-                result, current_spec.name
+                values, current_spec.name
             );
-            parsed.insert(current_spec.name.to_string(), result);
+            parsed.insert(current_spec.name.to_string(), values);
         }
 
         Ok(Config {
