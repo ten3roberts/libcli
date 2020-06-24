@@ -96,4 +96,21 @@ mod tests {
         let args = ["./test", "file1", "file2"];
         config::Config::new(&args[..], &specs).unwrap_or_else(|err| panic!(err));
     }
+    #[test]
+    #[should_panic]
+    fn parse_missing() {
+        let specs = [
+            config::OptionSpec::new('\0', "", "Unnamed", true, config::OptionPolicy::AtLeast(1)),
+            config::OptionSpec::new(
+                'o',
+                "output",
+                "Unnamed",
+                true,
+                config::OptionPolicy::Exact((1)),
+            ),
+        ];
+
+        let args = ["./test", "file1", "file2"];
+        config::Config::new(&args[..], &specs).unwrap_or_else(|err| panic!(err));
+    }
 }

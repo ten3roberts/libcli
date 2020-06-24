@@ -61,7 +61,7 @@ impl OptionSpec {
             OptionPolicy::Exact(n) => {
                 if values.len() != n {
                     return Err(format!(
-                        "{} values supplied for option {}, expected at most {}",
+                        "{} values supplied for option '{}', expected at most {}",
                         values.len(),
                         self.name,
                         n,
@@ -72,7 +72,7 @@ impl OptionSpec {
             OptionPolicy::AtLeast(n) => {
                 if values.len() < n {
                     return Err(format!(
-                        "{} values supplied for option {}, expected at least {}",
+                        "{} values supplied for option '{}', expected at least {}",
                         values.len(),
                         self.name,
                         n,
@@ -83,7 +83,7 @@ impl OptionSpec {
             OptionPolicy::AtMost(n) => {
                 if values.len() > n {
                     return Err(format!(
-                        "{} values supplied for option {}, expected at most {}",
+                        "{} values supplied for option '{}', expected at most {}",
                         values.len(),
                         self.name,
                         n,
@@ -151,9 +151,7 @@ impl Config {
             // New full-name arg
 
             if arg.starts_with("-") {
-                // Save the last option values
-                println!("Collecting {:?} for {}", values, current_spec.name);
-
+                // Collect the last option values
                 values = current_spec.enforce(values)?;
 
                 parsed.insert(current_spec.name.to_string(), values);
@@ -174,7 +172,7 @@ impl Config {
                     for (index, option) in options.iter().enumerate() {
                         let spec = match abrev_map.get(&option) {
                             Some(spec) => spec,
-                            None => return Err(format!("Invalid abbreviated option {}", option)),
+                            None => return Err(format!("Invalid abbreviated option '{}'", option)),
                         };
 
                         // The last option is set to collect the values following
@@ -193,13 +191,16 @@ impl Config {
 
         // Collect what remains
         {
-            println!(
-                "Collected remaining values {:?} for option {}",
-                values, current_spec.name
-            );
             values = current_spec.enforce(values)?;
 
             parsed.insert(current_spec.name.to_string(), values);
+        }
+
+        // Check all required options where specified or Err
+        for required in specs.iter().filter(|spec| spec.required) {
+            if let None = parsed.get(required.name) {
+                return Err(format!("Missing required option '{}'", required.name));
+            }
         }
 
         Ok(Config {
