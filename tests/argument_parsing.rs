@@ -42,7 +42,14 @@ mod tests {
             ),
         ];
 
-        let args = ["./test myfile.txt", "--output", "output.txt", "-rvn", "3"];
+        let args = [
+            "./test",
+            "myfile.txt",
+            "--output",
+            "output.txt",
+            "-rvn",
+            "3",
+        ];
 
         let config = config::Config::new(&args[..], &specs).unwrap_or_else(|err| panic!(err));
 
@@ -58,5 +65,35 @@ mod tests {
                 .expect("Didn't parse --number option"),
             vec!["3".to_string()],
         );
+    }
+    #[test]
+    #[should_panic]
+    fn parse_too_few() {
+        let specs = [config::OptionSpec::new(
+            '\0',
+            "",
+            "Files to search",
+            true,
+            config::OptionPolicy::AtLeast(1),
+        )];
+
+        let args = ["./test"];
+
+        config::Config::new(&args[..], &specs).unwrap_or_else(|err| panic!(err));
+    }
+
+    #[test]
+    #[should_panic]
+    fn parse_too_many() {
+        let specs = [config::OptionSpec::new(
+            '\0',
+            "",
+            "File to search",
+            true,
+            config::OptionPolicy::AtMost(1),
+        )];
+
+        let args = ["./test", "file1", "file2"];
+        config::Config::new(&args[..], &specs).unwrap_or_else(|err| panic!(err));
     }
 }

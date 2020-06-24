@@ -3,18 +3,18 @@
 //! Parses arguments from either the command line or supplied list
 //! Takes a list of OptionSpecs and returns a Config containing the parsed data
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 /// Determines how the number of supplied values should match an argument
 /// 0 val indicates a switch like argument
 
 pub enum OptionPolicy {
     // The args's supplied values should match exactly
-    Exact(u32),
+    Exact(usize),
     // The option's supplied values should be at least n
-    AtLeast(u32),
+    AtLeast(usize),
     // The option's supplied values should be at most n
-    AtMost(u32),
+    AtMost(usize),
 }
 
 /// Specifies an option that can be given in the command line<br>
@@ -52,6 +52,47 @@ impl OptionSpec {
             policy,
         }
     }
+
+    // Consumes and checks supplied values with the option policy
+    // Returns Ok(values) on success
+    // Returns Err(reason) on failure
+    fn enforce(&self, values: Vec<String>) -> Result<Vec<String>, String> {
+        match self.policy {
+            OptionPolicy::Exact(n) => {
+                if values.len() != n {
+                    return Err(format!(
+                        "{} values supplied for option {}, expected at most {}",
+                        values.len(),
+                        self.name,
+                        n,
+                    ));
+                };
+                Ok(values)
+            }
+            OptionPolicy::AtLeast(n) => {
+                if values.len() < n {
+                    return Err(format!(
+                        "{} values supplied for option {}, expected at least {}",
+                        values.len(),
+                        self.name,
+                        n,
+                    ));
+                };
+                Ok(values)
+            }
+            OptionPolicy::AtMost(n) => {
+                if values.len() > n {
+                    return Err(format!(
+                        "{} values supplied for option {}, expected at most {}",
+                        values.len(),
+                        self.name,
+                        n,
+                    ));
+                };
+                Ok(values)
+            }
+        }
+    }
 }
 
 /// Specifies a configuration of parsed arguments
@@ -82,6 +123,7 @@ impl Config {
         mut args: impl Iterator<Item = String>,
         specs: &[OptionSpec],
     ) -> Result<Config, String> {
+        // Consume first argument
         let binary = args
             .next()
             .expect("Unable to retrieve binary location argument");
@@ -110,6 +152,10 @@ impl Config {
 
             if arg.starts_with("-") {
                 // Save the last option values
+                println!("Collecting {:?} for {}", values, current_spec.name);
+
+                values = current_spec.enforce(values)?;
+
                 parsed.insert(current_spec.name.to_string(), values);
                 values = Vec::new();
 
@@ -145,12 +191,14 @@ impl Config {
             values.push(arg);
         }
 
-        // Add left over bit
-        if values.len() > 0 {
+        // Collect what remains
+        {
             println!(
                 "Collected remaining values {:?} for option {}",
                 values, current_spec.name
             );
+            values = current_spec.enforce(values)?;
+
             parsed.insert(current_spec.name.to_string(), values);
         }
 
