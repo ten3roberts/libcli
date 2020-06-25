@@ -77,7 +77,7 @@ mod tests {
     fn parse_too_few() {
         let specs = [config::OptionSpec::new(
             '\0',
-            "",
+            "(unnamed)",
             "Files to search",
             true,
             config::OptionPolicy::AtLeast(2),
@@ -105,9 +105,15 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn parse_missing() {
+    fn parse_dup() {
         let specs = [
-            config::OptionSpec::new('\0', "", "Unnamed", true, config::OptionPolicy::AtLeast(1)),
+            config::OptionSpec::new(
+                '\0',
+                "(unnamed)",
+                "Unnamed",
+                true,
+                config::OptionPolicy::AtLeast(1),
+            ),
             config::OptionSpec::new(
                 'o',
                 "output",
@@ -117,7 +123,37 @@ mod tests {
             ),
         ];
 
-        let args = ["./test", "file1", "file2"];
+        let args = ["./test", "-o", "file1", "-o", "file2"];
+        config::Config::new(&args[..], &specs).unwrap_or_else(|err| panic!(err));
+    }
+
+    #[test]
+    fn parse_dup_switch() {
+        let specs = [
+            config::OptionSpec::new(
+                '\0',
+                "(unnamed)",
+                "Unnamed",
+                true,
+                config::OptionPolicy::AtLeast(1),
+            ),
+            config::OptionSpec::new(
+                'o',
+                "output",
+                "Specifies the output file",
+                true,
+                config::OptionPolicy::Exact(1),
+            ),
+            config::OptionSpec::new(
+                'v',
+                "verbose",
+                "Show verbose output",
+                true,
+                config::OptionPolicy::Exact(0),
+            ),
+        ];
+
+        let args = ["./test", "-vo", "file1", "-v"];
         config::Config::new(&args[..], &specs).unwrap_or_else(|err| panic!(err));
     }
 }

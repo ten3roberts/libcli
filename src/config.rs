@@ -60,7 +60,7 @@ impl OptionSpec {
             OptionPolicy::Exact(n) => {
                 if values.len() != n {
                     return Err(format!(
-                        "{} values supplied for option '{}', expected at most {}",
+                        "{} values supplied for option '{}', expected exactly {}",
                         values.len(),
                         self.name,
                         n,
@@ -128,6 +128,7 @@ impl Config {
     /// Returns Err(msg) if a spec doesn't match what is specified<br>
     /// The arguments before any option are specified with the (unnamed)<br>
     /// The values for the options can be accessed with the option(name) method<br>
+    /// Parsing will fail if an option with policy other than Exact(0) is used twice
     /// Note, the spec isn't stored with config<br>
     pub fn new(args: &[&str], specs: &[OptionSpec]) -> Result<Config, String> {
         Config::parse(args.iter().map(|arg| arg.to_string()), specs)
@@ -191,13 +192,19 @@ impl Config {
                 // Collect the last option values
                 values = current_spec.enforce(values)?;
 
-                parsed.insert(current_spec.name, values);
+                Self::insert_non_duplicate(&mut parsed, current_spec, values)?;
+
                 values = Vec::new();
 
                 // Single full name argument
                 if arg.starts_with("--") {
                     current_spec = match name_map.get(&arg[2..]) {
-                        Some(spec) => spec,
+                        Some(spec) => {
+                            if let Some(_) = parsed.get(spec.name) {
+                                return Err(format!("Duplicate option '{}'", spec.name));
+                            }
+                            spec
+                        }
                         None => return Err(format!("Invalid option {}", arg)),
                     };
                 }
@@ -218,7 +225,10 @@ impl Config {
                             break;
                         }
 
-                        parsed.insert(spec.name, vec![]);
+                        if let Some(_) = parsed.get(spec.name) {
+                            return Err(format!("Duplicate option '{}'", spec.name));
+                        }
+                        Self::insert_non_duplicate(&mut parsed, spec, vec![])?;
                     }
                 }
                 continue;
@@ -229,8 +239,7 @@ impl Config {
         // Collect what remains
         values = current_spec.enforce(values)?;
 
-        parsed.insert(current_spec.name, values);
-
+        Self::insert_non_duplicate(&mut parsed, current_spec, values)?;
         // Check all required options where specified or Err
         for required in specs.iter().filter(|spec| spec.required) {
             if let None = parsed.get(required.name) {
@@ -239,6 +248,26 @@ impl Config {
         }
 
         Ok(Config { parsed })
+    }
+
+    // Checks if option is already present before inserting and return Err
+    // If spec required Exact(0) it won't return Err
+    fn insert_non_duplicate(
+        map: &mut HashMap<&str, Vec<String>>,
+        spec: &OptionSpec,
+        values: Vec<String>,
+    ) -> Result<(), String> {
+        match spec.policy {
+            OptionPolicy::Exact(0) => (),
+            _ => {
+                if let Some(_) = map.get(spec.name) {
+                    return Err(format!("Duplicate option '{}'", spec.name));
+                }
+            }
+        }
+
+        map.insert(spec.name, values);
+        Ok(())
     }
 
     // Returns the value[s] given to named or unnamed argument
