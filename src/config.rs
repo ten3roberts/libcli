@@ -95,6 +95,19 @@ impl OptionSpec {
     }
 }
 
+impl std::fmt::Display for OptionSpec {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "    -{}, --{} {}\n        {}\n\n",
+            self.abrev,
+            self.name,
+            if self.required { "[required]" } else { "" },
+            self.desc,
+        )
+    }
+}
+
 /// Specifies a configuration of parsed arguments
 /// Each option which was given as a spec can be accessed by option(name)
 /// This returns a Option<Vec<String>> containing the values of the option (if any)
@@ -109,13 +122,44 @@ pub struct Config {
 }
 
 impl Config {
-    // Parses config from passed command line arguments
+    /// Parses config from passed command line arguments (env::args())
+    /// Specs is a list containing specifications for the available options a use can supply
+    /// Returns Err(msg) if a spec doesn't match what is specified
     pub fn new_env(specs: &[OptionSpec]) -> Result<Config, String> {
         Config::parse(std::env::args(), specs)
     }
-
+    /// Parses config from custom supplied arguments
+    /// Specs is a list containing specifications for the available options a use can supply
+    /// Returns Err(msg) if a spec doesn't match what is specified
     pub fn new(args: &[&str], specs: &[OptionSpec]) -> Result<Config, String> {
         Config::parse(args.iter().map(|arg| arg.to_string()), specs)
+    }
+
+    /// Generates a usage string from supplied specs
+    // Through a combination of list_required and list_unrequired you can configure it to only show required options and vice versa
+    pub fn generate_usage(
+        specs: &[OptionSpec],
+        list_required: bool,
+        list_unrequired: bool,
+    ) -> String {
+        let mut required_string = String::new();
+        let mut unrequired_string = String::new();
+        if list_required {
+            required_string = specs
+                .iter()
+                .filter(|spec| spec.required)
+                .map(|spec| spec.to_string())
+                .collect();
+        }
+        if list_unrequired {
+            unrequired_string = specs
+                .iter()
+                .filter(|spec| !spec.required)
+                .map(|spec| spec.to_string())
+                .collect();
+        }
+
+        return required_string + &unrequired_string;
     }
 
     // Parses config from passed iterator

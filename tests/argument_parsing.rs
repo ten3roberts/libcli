@@ -23,7 +23,7 @@ mod tests {
                 'o',
                 "output",
                 "Specifies output file",
-                false,
+                true,
                 config::OptionPolicy::Exact(1),
             ),
             config::OptionSpec::new(
@@ -50,6 +50,11 @@ mod tests {
             "-rvn",
             "3",
         ];
+
+        println!(
+            "Usage:\n{}",
+            config::Config::generate_usage(&specs, false, true)
+        );
 
         let config = config::Config::new(&args[..], &specs).unwrap_or_else(|err| panic!(err));
 
