@@ -105,7 +105,7 @@ impl OptionSpec {
 pub struct Config {
     // The path to the binary args[0]
     binary: String,
-    parsed: HashMap<String, Vec<String>>,
+    parsed: HashMap<&'static str, Vec<String>>,
 }
 
 impl Config {
@@ -135,7 +135,7 @@ impl Config {
         let abrev_map: HashMap<char, &OptionSpec> =
             specs.iter().map(|spec| (spec.abrev, spec)).collect();
 
-        let mut parsed: HashMap<String, Vec<String>> = HashMap::new();
+        let mut parsed: HashMap<&'static str, Vec<String>> = HashMap::new();
 
         // Tries to find a spec with an empty name, the unnamed spec
         // If some it will go by that ruling
@@ -154,7 +154,7 @@ impl Config {
                 // Collect the last option values
                 values = current_spec.enforce(values)?;
 
-                parsed.insert(current_spec.name.to_string(), values);
+                parsed.insert(current_spec.name, values);
                 values = Vec::new();
 
                 // Single full name argument
@@ -181,7 +181,7 @@ impl Config {
                             break;
                         }
 
-                        parsed.insert(spec.name.to_string(), vec![]);
+                        parsed.insert(spec.name, vec![]);
                     }
                 }
                 continue;
@@ -190,11 +190,9 @@ impl Config {
         }
 
         // Collect what remains
-        {
-            values = current_spec.enforce(values)?;
+        values = current_spec.enforce(values)?;
 
-            parsed.insert(current_spec.name.to_string(), values);
-        }
+        parsed.insert(current_spec.name, values);
 
         // Check all required options where specified or Err
         for required in specs.iter().filter(|spec| spec.required) {

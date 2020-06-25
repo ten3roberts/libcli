@@ -106,7 +106,7 @@ mod tests {
                 "output",
                 "Unnamed",
                 true,
-                config::OptionPolicy::Exact((1)),
+                config::OptionPolicy::Exact(1),
             ),
         ];
 
