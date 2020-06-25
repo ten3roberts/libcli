@@ -7,13 +7,13 @@ fn main() {
             "(unnamed)",
             "Input files",
             true,
-            args::OptionPolicy::AtLeast(2), // 1st value is program name
+            args::OptionPolicy::AtLeast(1), // 1st value is program name
         ),
         args::OptionSpec::new(
             'o',
             "output",
             "Searches recursive",
-            false,
+            true,
             args::OptionPolicy::Exact(1),
         ),
         args::OptionSpec::new(
@@ -23,12 +23,27 @@ fn main() {
             false,
             args::OptionPolicy::Exact(0),
         ),
+        args::OptionSpec::new(
+            'h',
+            "help",
+            "Display a help screen",
+            false,
+            args::OptionPolicy::FinalizeIgnore(),
+        ),
     ];
 
     let config = args::Config::new_env(&specs).unwrap_or_else(|err| {
         println!("{}", err);
         std::process::exit(1);
     });
+
+    if let Some(_) = config.option("help") {
+        println!(
+            "Myprogram\n{}",
+            args::Config::generate_usage(&specs, true, true)
+        );
+        return;
+    }
 
     // Check if verbose was specified, either as --verbose or -v
     let verbose: bool = match config.option("verbose") {

@@ -66,3 +66,53 @@ After creating an OptionSpec list, pass them to either Config::new or Config::ne
 
     // logic
 ```
+
+### Ignoring options
+The OptionPolicy provides a variant call Final which will collect all remaining arguments to the values of the option, regardless if there are more options
+
+This can be useful if you want the user to enter a command as a last argument and not have the argument to that command affect yours, e.g;
+    `myprogram -vo output.txt --exec grep search -r .`
+
+If `exec` is policy `Final`, -r option won't be parsed as another argument but rather become a value of `exec` 
+
+### Help and Usage
+Detecting help option without failing on required option
+
+The `FinalIgnore` OptionPolicy does the same as Finalize but will not Err on missing required options, this is useful for overriding options like `help` or `version`
+
+This enables us to provide the help option without failing to parse due to missing required option
+
+`args::Config::generate_usage(&specs, list_required, list_unrequired)` generates a usage string which can be printed
+
+```
+// Add this OptionSpec with the others with FinalizeIgnore policy
+args::OptionSpec::new(
+            'h',
+            "help",
+            "Display a help screen",
+            false,
+            args::OptionPolicy::FinalizeIgnore(),
+        ),
+```
+
+Parse as normal and check if help was present
+Note: When using FinalizeIgnore, required options may return none, which they don't usually because parse return Err
+
+```
+let config = args::Config::new_env(&specs).unwrap_or_else(|err| {
+    println!("{}", err);
+    std::process::exit(1);
+});
+
+if let Some(_) = config.option("help") {
+    println!(
+        "Myprogram\n{}",
+        args::Config::generate_usage(&specs, true, true)
+    );
+    return;
+}
+```
+
+Using this style rather than an auto help feature when parsing is that you can add extra information the argument parses doesn't know or print to something else than console if for example in GUI application
+
+This can also be used for version or similar

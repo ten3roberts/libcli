@@ -8,12 +8,16 @@ use std::collections::HashMap;
 /// 0 val indicates a switch like argument
 
 pub enum OptionPolicy {
-    // The args's supplied values should match exactly
+    /// The args's supplied values should match exactly
     Exact(usize),
-    // The option's supplied values should be at least n
+    /// The option's supplied values should be at least n
     AtLeast(usize),
-    // The option's supplied values should be at most n
+    /// The option's supplied values should be at most n
     AtMost(usize),
+    /// Finalize will collect all remaining arguments to the value of the option, regardless of if it contains further options
+    Finalize(),
+    /// Same as Finalize but will not cause Err on missing required option, useful for overriding options like --help
+    FinalizeIgnore(),
 }
 
 /// Specifies an option that can be given in the command line<br>
@@ -90,6 +94,8 @@ impl OptionSpec {
                 };
                 Ok(values)
             }
+            OptionPolicy::Finalize() => Ok(values),
+            OptionPolicy::FinalizeIgnore() => Ok(values),
         }
     }
 }
@@ -184,11 +190,19 @@ impl Config {
         };
 
         let mut values = Vec::new();
-
+        let mut in_finalize = false;
         for arg in args {
-            // New full-name arg
+            // New option
+            if !in_finalize && arg.starts_with("-") {
+                // If Final or FinalIgnore
+                match current_spec.policy {
+                    OptionPolicy::Finalize() | OptionPolicy::FinalizeIgnore() => {
+                        in_finalize = true;
+                        continue;
+                    }
+                    _ => (),
+                }
 
-            if arg.starts_with("-") {
                 // Collect the last option values
                 values = current_spec.enforce(values)?;
 
@@ -240,10 +254,14 @@ impl Config {
         values = current_spec.enforce(values)?;
 
         Self::insert_non_duplicate(&mut parsed, current_spec, values)?;
-        // Check all required options where specified or Err
-        for required in specs.iter().filter(|spec| spec.required) {
-            if let None = parsed.get(required.name) {
-                return Err(format!("Missing required option '{}'", required.name));
+
+        // Check all required options where specified or Err if not in Finalgnore
+        if let OptionPolicy::FinalizeIgnore() = current_spec.policy {
+        } else {
+            for required in specs.iter().filter(|spec| spec.required) {
+                if let None = parsed.get(required.name) {
+                    return Err(format!("Missing required option '{}'", required.name));
+                }
             }
         }
 
