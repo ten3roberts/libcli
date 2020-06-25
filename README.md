@@ -19,31 +19,31 @@ After creating an OptionSpec list, pass them to either Config::new or Config::ne
 
 ### Examples
 ```
-let specs = [
-        config::OptionSpec::new(
+ let specs = [
+        args::OptionSpec::new(
             '\0',
             "(unnamed)",
             "Input files",
             true,
-            config::OptionPolicy::AtLeast(2), // 1st value is program name
+            args::OptionPolicy::AtLeast(2), // 1st value is program name
         ),
-        config::OptionSpec::new(
+        args::OptionSpec::new(
             'o',
             "output",
             "Searches recursive",
             false,
-            config::OptionPolicy::Exact(1),
+            args::OptionPolicy::Exact(1),
         ),
-        config::OptionSpec::new(
+        args::OptionSpec::new(
             'v',
             "verbose",
             "Shows verbose output",
             false,
-            config::OptionPolicy::Exact(0),
+            args::OptionPolicy::Exact(0),
         ),
     ];
 
-    let config = config::Config::new_env(&specs).unwrap_or_else(|err| {
+    let config = args::Config::new_env(&specs).unwrap_or_else(|err| {
         println!("{}", err);
         std::process::exit(1);
     });
