@@ -7,7 +7,7 @@ mod tests {
         let specs = [
             config::OptionSpec::new(
                 '\0',
-                "",
+                "(unnamed)",
                 "Unnamed arguments",
                 true,
                 config::OptionPolicy::AtLeast(1),
@@ -93,7 +93,7 @@ mod tests {
     fn parse_too_many() {
         let specs = [config::OptionSpec::new(
             '\0',
-            "",
+            "(unnamed)",
             "File to search",
             true,
             config::OptionPolicy::AtMost(1),
@@ -111,7 +111,7 @@ mod tests {
             config::OptionSpec::new(
                 'o',
                 "output",
-                "Unnamed",
+                "Specifies the output file",
                 true,
                 config::OptionPolicy::Exact(1),
             ),

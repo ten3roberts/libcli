@@ -1,7 +1,6 @@
 //! # Argument parser
-//!
-//! Parses arguments from either the command line or supplied list
-//! Takes a list of OptionSpecs and returns a Config containing the parsed data
+//! Parses and generates configuration from supplied arguments and option specifications
+//! Can also generate usage strings
 
 use std::collections::HashMap;
 
@@ -20,7 +19,7 @@ pub enum OptionPolicy {
 /// Specifies an option that can be given in the command line<br>
 /// Later supplied to config::Config::new()<br>
 /// abrev: The abreviation of name, e.g; 'r' or 'c'
-/// name: The name/trigger for the option, e.g; "recursive" or "clean", an empty name specifies the first unnamed args<br>
+/// name: The name/trigger for the option, e.g; "recursive" or "clean", an a name of "(unnamed)" specifies the first unnamed arguments before any option is given<br>
 /// desc: a short description printed with --help<br>
 /// required: specifies if the option is required or optional<br>
 /// policy: an enum containing the number of values and how they're enforced<br>
@@ -115,7 +114,7 @@ pub struct Config {
     parsed: HashMap<&'static str, Vec<String>>,
 }
 
-/// Parses and generates configuration from supplied arguments and option specification
+/// Parses and generates configuration from supplied arguments and option specifications
 /// Can also generate usage strings
 impl Config {
     /// Same as Config::new but uses the arguments passed to the program (env::args)
@@ -178,9 +177,9 @@ impl Config {
         // Tries to find a spec with an empty name, the unnamed spec
         // If some it will go by that ruling
         // If none, it will accept as many unnamed args as there are
-        let mut current_spec: &OptionSpec = match name_map.get("") {
+        let mut current_spec: &OptionSpec = match name_map.get("(unnamed)") {
             Some(v) => v,
-            None => return Err("No spec for unnamed arguments found".to_string()),
+            None => return Err("No specification for unnamed arguments found".to_string()),
         };
 
         let mut values = Vec::new();
