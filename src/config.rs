@@ -25,7 +25,7 @@ pub enum OptionPolicy {
 /// policy: an enum containing the number of values and how they're enforced<br>
 /// ## Example
 /// ```
-/// let spec = cli_utils::config::OptionSpec::new('r', "recursive", "Reads all files recursively in a directory", false,cli_utils::config::OptionPolicy::Exact(0));
+/// let spec = libcli::config::OptionSpec::new('r', "recursive", "Reads all files recursively in a directory", false,libcli::config::OptionPolicy::Exact(0));
 /// ```
 pub struct OptionSpec {
     abrev: char,

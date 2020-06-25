@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use cli_utils::config;
+    use libcli::config;
 
     #[test]
     fn parse_0() {
