@@ -3,7 +3,7 @@
 //! Parses arguments from either the command line or supplied list
 //! Takes a list of OptionSpecs and returns a Config containing the parsed data
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 /// Determines how the number of supplied values should match an argument
 /// 0 val indicates a switch like argument
@@ -111,26 +111,25 @@ impl std::fmt::Display for OptionSpec {
 /// Specifies a configuration of parsed arguments
 /// Each option which was given as a spec can be accessed by option(name)
 /// This returns a Option<Vec<String>> containing the values of the option (if any)
-/// # Parsing and creating a config
-/// ```
-///
-/// ```
 pub struct Config {
-    // The path to the binary args[0]
-    binary: String,
     parsed: HashMap<&'static str, Vec<String>>,
 }
 
+/// Parses and generates configuration from supplied arguments and option specification
+/// Can also generate usage strings
 impl Config {
-    /// Parses config from passed command line arguments (env::args())
-    /// Specs is a list containing specifications for the available options a use can supply
-    /// Returns Err(msg) if a spec doesn't match what is specified
+    /// Same as Config::new but uses the arguments passed to the program (env::args)
+    /// The program path, first argument, is included in the unnamed args<br>
+    /// Note, the spec isn't stored with config<br>
     pub fn new_env(specs: &[OptionSpec]) -> Result<Config, String> {
         Config::parse(std::env::args(), specs)
     }
-    /// Parses config from custom supplied arguments
-    /// Specs is a list containing specifications for the available options a use can supply
-    /// Returns Err(msg) if a spec doesn't match what is specified
+    /// Parses config from custom supplied arguments<br>
+    /// Specs is a list containing specifications for the available options a use can supply<br>
+    /// Returns Err(msg) if a spec doesn't match what is specified<br>
+    /// The arguments before any option are specified with the (unnamed)<br>
+    /// The values for the options can be accessed with the option(name) method<br>
+    /// Note, the spec isn't stored with config<br>
     pub fn new(args: &[&str], specs: &[OptionSpec]) -> Result<Config, String> {
         Config::parse(args.iter().map(|arg| arg.to_string()), specs)
     }
@@ -164,14 +163,9 @@ impl Config {
 
     // Parses config from passed iterator
     fn parse<'a>(
-        mut args: impl Iterator<Item = String>,
+        args: impl Iterator<Item = String>,
         specs: &[OptionSpec],
     ) -> Result<Config, String> {
-        // Consume first argument
-        let binary = args
-            .next()
-            .expect("Unable to retrieve binary location argument");
-
         // For quickly locating options
         let name_map: HashMap<&str, &OptionSpec> =
             specs.iter().map(|spec| (spec.name, spec)).collect();
@@ -245,20 +239,12 @@ impl Config {
             }
         }
 
-        Ok(Config {
-            binary: binary,
-            parsed,
-        })
+        Ok(Config { parsed })
     }
 
-    // Returns the value[s] given to named or unnamed [""] argument
+    // Returns the value[s] given to named or unnamed argument
     // Returns None if argument didn't exist
     pub fn option(&self, name: &str) -> Option<&Vec<String>> {
         self.parsed.get(name)
-    }
-
-    // Returns the path the program was run from
-    pub fn binary(&self) -> &String {
-        &self.binary
     }
 }

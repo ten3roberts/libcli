@@ -71,6 +71,7 @@ mod tests {
             vec!["3".to_string()],
         );
     }
+
     #[test]
     #[should_panic]
     fn parse_too_few() {
@@ -79,7 +80,7 @@ mod tests {
             "",
             "Files to search",
             true,
-            config::OptionPolicy::AtLeast(1),
+            config::OptionPolicy::AtLeast(2),
         )];
 
         let args = ["./test"];
@@ -101,6 +102,7 @@ mod tests {
         let args = ["./test", "file1", "file2"];
         config::Config::new(&args[..], &specs).unwrap_or_else(|err| panic!(err));
     }
+
     #[test]
     #[should_panic]
     fn parse_missing() {
