@@ -37,6 +37,8 @@ fn main() {
         std::process::exit(1);
     });
 
+    println!("{:?}", config.option("help"));
+
     if let Some(_) = config.option("help") {
         println!(
             "Myprogram\n{}",

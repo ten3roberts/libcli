@@ -223,6 +223,7 @@ impl Config {
                 match current_spec.policy {
                     OptionPolicy::Finalize() | OptionPolicy::FinalizeIgnore() => {
                         in_finalize = true;
+                        values.push(arg);
                         continue;
                     }
                     _ => (),
