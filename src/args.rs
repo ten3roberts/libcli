@@ -206,11 +206,13 @@ impl Config {
                 }
 
                 // Collect the last option values
-                values = current_spec.enforce(values)?;
+                if values.len() > 0 {
+                    values = current_spec.enforce(values)?;
 
-                Self::insert_non_duplicate(&mut parsed, current_spec, values)?;
+                    Self::insert_non_duplicate(&mut parsed, current_spec, values)?;
 
-                values = Vec::new();
+                    values = Vec::new();
+                }
 
                 // Single full name argument
                 if arg.starts_with("--") {
