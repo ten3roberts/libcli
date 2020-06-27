@@ -108,9 +108,32 @@ impl std::fmt::Display for OptionSpec {
             self.abrev,
             self.name,
             if self.required { "[required]" } else { "" },
-            self.desc,
+            indent(self.desc, 8, ' '),
         )
     }
+}
+
+// Indents every line in passed string, not just the first and returns the result
+// Not including the first line
+fn indent(string: &str, depth: usize, indent_ch: char) -> String {
+    let mut result = String::with_capacity(string.len());
+    let mut buf = String::with_capacity(256);
+    let mut indent: [u8; 4] = [b'\0'; 4];
+    let indent = indent_ch.encode_utf8(&mut indent).repeat(depth);
+    for ch in string.chars() {
+        buf.push(ch);
+        if ch == '\n' {
+            buf.push_str(&indent);
+        }
+
+        if buf.len() > buf.capacity() - 2 {
+            result.push_str(&buf);
+            buf.clear();
+        }
+    }
+    result.push_str(&buf);
+    buf.clear();
+    result
 }
 
 /// Specifies a configuration of parsed arguments

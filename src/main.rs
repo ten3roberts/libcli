@@ -26,7 +26,7 @@ fn main() {
         args::OptionSpec::new(
             'h',
             "help",
-            "Display a help screen",
+            "This is a\nMultiline\nHelp message",
             false,
             args::OptionPolicy::FinalizeIgnore(),
         ),
