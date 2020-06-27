@@ -153,7 +153,7 @@ mod tests {
             ),
         ];
 
-        let args = ["./test", "-vo", "file1", "-v"];
+        let args = ["./test", "foo", "-vo", "file1", "-v"];
         args::Config::new(&args[..], &specs).unwrap_or_else(|err| panic!(err));
     }
 }

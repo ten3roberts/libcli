@@ -117,6 +117,7 @@ impl std::fmt::Display for OptionSpec {
 /// Each option which was given as a spec can be accessed by option(name)
 /// This returns a Option<Vec<String>> containing the values of the option (if any)
 pub struct Config {
+    command: String,
     parsed: HashMap<&'static str, Vec<String>>,
 }
 
@@ -169,9 +170,10 @@ impl Config {
 
     // Parses config from passed iterator
     fn parse<'a>(
-        args: impl Iterator<Item = String>,
+        mut args: impl Iterator<Item = String>,
         specs: &[OptionSpec],
     ) -> Result<Config, String> {
+        let command = args.next().unwrap_or_else(|| String::new());
         // For quickly locating options
         let name_map: HashMap<&str, &OptionSpec> =
             specs.iter().map(|spec| (spec.name, spec)).collect();
@@ -265,7 +267,7 @@ impl Config {
             }
         }
 
-        Ok(Config { parsed })
+        Ok(Config { command, parsed })
     }
 
     // Checks if option is already present before inserting and return Err
@@ -288,8 +290,13 @@ impl Config {
         Ok(())
     }
 
-    // Returns the value[s] given to named or unnamed argument
-    // Returns None if argument didn't exist
+    /// Returns the command, I.e; the first argument
+    pub fn command(&self) -> &String {
+        &self.command
+    }
+
+    /// Returns the value[s] given to named or unnamed argument
+    /// Returns None if argument didn't exist
     pub fn option(&self, name: &str) -> Option<&Vec<String>> {
         self.parsed.get(name)
     }
