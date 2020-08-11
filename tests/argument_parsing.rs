@@ -24,7 +24,7 @@ mod tests {
                 "output",
                 "Specifies output file",
                 true,
-                args::OptionPolicy::Exact(1),
+                args::OptionPolicy::Finalize(),
             ),
             args::OptionSpec::new(
                 'v',
@@ -45,10 +45,11 @@ mod tests {
         let args = [
             "./test",
             "myfile.txt",
+            "-r",
+            "-vn",
+            "3",
             "--output",
             "output.txt",
-            "-rvn",
-            "3",
         ];
 
         println!(
@@ -70,6 +71,8 @@ mod tests {
                 .expect("Didn't parse --number option"),
             ["3".to_string()],
         );
+
+        println!("r: {:?}", config.option("recursive"));
     }
 
     #[test]
