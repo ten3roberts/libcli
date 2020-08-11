@@ -1,6 +1,6 @@
 [package]
 name = "libcli"
-version = "0.3.7"
+version = "0.3.8"
 license = "MIT"
 authors = ["Tim Roberts <ten3roberts@gmail.com>"]
 description = "A collection of utilities to help making command line based programs"

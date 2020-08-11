@@ -323,7 +323,10 @@ impl Config {
 
     /// Returns the value[s] given to named or unnamed argument
     /// Returns None if argument didn't exist
-    pub fn option(&self, name: &str) -> Option<&Vec<String>> {
-        self.parsed.get(name)
+    pub fn option(&self, name: &str) -> Option<&[String]> {
+        match self.parsed.get(name) {
+            Some(values) => Some(values),
+            None => None,
+        }
     }
 }

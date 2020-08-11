@@ -62,13 +62,13 @@ mod tests {
             *config
                 .option("output")
                 .expect("Didn't parse --output option"),
-            vec!["output.txt".to_string()],
+            ["output.txt".to_string()],
         );
         assert_eq!(
             *config
                 .option("number")
                 .expect("Didn't parse --number option"),
-            vec!["3".to_string()],
+            ["3".to_string()],
         );
     }
 
